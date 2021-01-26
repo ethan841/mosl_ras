@@ -13,6 +13,7 @@ void error_handling(char* message);
 int main(int argc, char *argv[])
 {
     int ttp_sock;
+    int ttp_sock2;
     int source_host_sock;
     int target_host_sock;
 
@@ -40,6 +41,8 @@ int main(int argc, char *argv[])
     if(ttp_sock == -1)
         error_handling("socket() error");    
 
+    ttp_sock2 = socket(PF_INET, SOCK_STREAM, 0);
+    
     memset(&ttp_addr, 0, sizeof(ttp_addr));
     ttp_addr.sin_family = AF_INET;
     ttp_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -69,14 +72,15 @@ int main(int argc, char *argv[])
     target_host_addr.sin_addr.s_addr = inet_addr(argv[2]);
     target_host_addr.sin_port = htons(atoi(argv[3]));
 
-    if(connect(ttp_sock, (struct sockaddr*)&target_host_addr, sizeof(target_host_addr)) == -1)
+    if(connect(ttp_sock2, (struct sockaddr*)&target_host_addr, sizeof(target_host_addr)) == -1)
         error_handling("target connect() error");
     
-    send(source_host_sock, message, sizeof(message), 0);
+    send(ttp_sock2, message, sizeof(message), 0);
+
 
     close(source_host_sock);
     close(ttp_sock);    
-
+    close(ttp_skck2);
     return 0;
 }
 

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <fstream>
+#include <unistd.h>
 #include <sys/types.h>
 
 using namespace std;
@@ -12,7 +12,7 @@ int main(char argc, char *argv[])
 
     //Absolute Path
     //const char *dcap_path[] = {};
-    const char *epid_args[] = {"dd", "dd"};
+    char *epid_args[] = {"/home/mobileos7/SGX/sgx-ra-sample/run-server", NULL};
     int ret;
 
     pid = fork();
@@ -23,7 +23,7 @@ int main(char argc, char *argv[])
     }
     else
     {
-        ret = execv("epid path", epid_args);
+        ret = execv("/home/mobileos7/SGX/sgx-ra-sample/run-server", epid_args);
 
         if(ret==-1)
         {

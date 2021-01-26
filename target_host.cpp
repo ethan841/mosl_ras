@@ -13,6 +13,7 @@ void error_handling(char *message);
 int main(int argc, char *argv[])
 {
     int sock;
+    int sock2;
     struct sockaddr_in ttp_addr;
     struct sockaddr_in ttp_addr_in;
     socklen_t ttp_addr_size;
@@ -22,7 +23,7 @@ int main(int argc, char *argv[])
 
     char message[] = "migration result";
 
-    if(argc != 3)
+    if(argc != 4)
     {
         printf("Usage: %s <IP> <port> <incoming_port>\n", argv[0]);
         exit(1);
@@ -32,12 +33,18 @@ int main(int argc, char *argv[])
     if(sock == -1)
         error_handling("socket() error");
 
+    sock2 = socket(PF_INET, SOCK_STREAM, 0);
+    if(sock == -1)
+        error_handling("socket() error");
+
+    printf("%s\n", argv[3]);
+
     memset(&ttp_addr, 0, sizeof(ttp_addr));
     ttp_addr_in.sin_family = AF_INET;
-    ttp_addr_in.sin_addr.s_addr = inet_addr(INADDR_ANY);
+    ttp_addr_in.sin_addr.s_addr = htonl(INADDR_ANY);
     ttp_addr_in.sin_port = htons(atoi(argv[3]));
 
-    if(bind(sock, struct sockaddr*)&ttp_addr_in, sizeof(ttp_addr_in)) == -1)
+    if(bind(sock, (struct sockaddr*)&ttp_addr_in, sizeof(ttp_addr_in)) == -1)
         error_handling("bind() error");
 
     if(listen(sock, 5) == -1)
@@ -59,10 +66,17 @@ int main(int argc, char *argv[])
     ttp_addr.sin_addr.s_addr = inet_addr(argv[1]);
     ttp_addr.sin_port = htons(atoi(argv[2]));
 
-    if(connect(sock, (struct sockaddr*)&ttp_addr, sizeof(ttp_addr)) == -1)
+    if(connect(sock2, (struct sockaddr*)&ttp_addr, sizeof(ttp_addr)) == -1)
         error_handling("connect() error");
 
-    send(sock, message, sizeof(message), 0);
+    send(sock2, message, sizeof(message), 0);
 
     return 0;
+}
+
+void error_handling(char *message)
+{
+	fputs(message, stderr);
+	fputc('\n', stderr);
+	exit(1);
 }
