@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
     char recv_buf[BUF_SIZE];
     int msg_len;
 
-    char message[] = "migration result";
+    char message[] = "attestation result check request";
 
     if(argc != 4)
     {
-        printf("Usage: %s <IP> <port> <incoming_port>\n", argv[0]);
+        printf("Usage: %s <server IP> <server port> <incoming_port>\n", argv[0]);
         exit(1);
     }
 
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     recv(sock, recv_buf, sizeof(recv_buf), 0);
     printf("%s\n", recv_buf);
     //make Attestation result
-    printf("Send Attestation result\n", recv_buf);
+    printf("Send Attestation check request\n", recv_buf);
 
     memset(&ttp_addr, 0, sizeof(ttp_addr));
     ttp_addr.sin_family = AF_INET;
