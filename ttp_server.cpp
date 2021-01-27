@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 
     if(argc != 4)
     {
-        printf("Usage:%s <port> <target IP> <target Port>\n", argv[0]);
+        printf("Usage:%s <init incoming port> <target IP> <target Port>\n", argv[0]);
         exit(1);
     }
 
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 
     close(source_host_sock);
     close(ttp_sock);    
-    close(ttp_skck2);
+    close(ttp_sock2);
     return 0;
 }
 
