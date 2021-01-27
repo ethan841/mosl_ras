@@ -11,9 +11,9 @@ int main(char argc, char *argv[])
     pid_t pid;
 
     //Absolute Path
-    //const char *dcap_path[] = {};
-    char *dcap_args[] = {"/home/mobileosdcaps/SGX/sgx-ra-sample/run-server", NULL};
-    char *epid_args[] = {"/home/mobileosdcaps/SGX/sgx-ra-sample/run-server", NULL};
+    //char *dcap_args[] = {"/home/mobileosdcaps/SGX/SGXDataCenterAttestationPrimitives/SampleCode/QuoteGenerationSample/app", NULL};
+    char *dcap_args[] = {"/home/mobileosdcaps/SGX/mosl/SGXDataCenterAttestationPrimitives/SampleCode/QuoteGenerationSample/app 127.0.0.1 5500", NULL};
+    char *epid_args[] = {"/home/mobileosdcaps/SGX/sgx-ra-sample/run-client", NULL};
     int ret;
 
     pid = fork();
@@ -27,21 +27,24 @@ int main(char argc, char *argv[])
         //execute dcap remote attestation sample
         ret = system(dcap_args[0]);
 
-        if(ret != -1)
+        if(ret != 0)
         {
             cout << "Error in DCAP Remote Attestation Process" << endl;
             //execute epid remote attestation sample
-            ret = execv("/home/mobileosdcaps/SGX/sgx-ra-sample/run-server", epid_args);
-
-            if(ret==-1)
+            ret = execv("/home/mobileosdcaps/SGX/sgx-ra-sample/run-client", epid_args);
+            //ret = execv("/home/mobileosdcaps/SGX/SGXDataCenterAttestationPrimitives/SampleCode/QuoteGenerationSample/app", dcap_args);
+            //ret = system(epid_args[0]);
+            if(ret != 0)
             {
                 perror("execv");
                 exit(EXIT_FAILURE);
             }
+	    
         }
         else
-            return 0;
+	    cout << "DCAP Attestation END" << endl;
     }
     
     return 0;
 }
+
