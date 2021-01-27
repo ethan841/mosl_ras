@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     recv(sock, recv_buf, sizeof(recv_buf), 0);
     printf("%s\n", recv_buf);
     //make Attestation result
-    printf("Send Attestation check request\n", recv_buf);
+    printf("Waiting for migration request\n", recv_buf);
 
     memset(&ttp_addr, 0, sizeof(ttp_addr));
     ttp_addr.sin_family = AF_INET;
