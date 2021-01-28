@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
     socklen_t ttp_addr_size;
     socklen_t ttp_addr_in_size;
     char recv_buf[BUF_SIZE];
+    char recv_buf2[BUF_SIZE];
     int msg_len;
 
     pid_t pid;
@@ -31,13 +32,13 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    sock = socket(PF_INET, SOCK_STREAM, 0);
-    if(sock == -1)
-        error_handling("socket() error");
+    //sock = socket(PF_INET, SOCK_STREAM, 0);
+    //if(sock == -1)
+    //    error_handling("socket() error");
 
-    sock2 = socket(PF_INET, SOCK_STREAM, 0);
-    if(sock == -1)
-        error_handling("socket() error");
+    //sock2 = socket(PF_INET, SOCK_STREAM, 0);
+    //if(sock == -1)
+    //    error_handling("socket() error");
 
     printf("Target host daemnon sample\n");
     printf("TTP remote attestaton port : %s\n", argv[1]);
@@ -45,16 +46,22 @@ int main(int argc, char *argv[])
 
     pid = fork();
 
+    printf("Fork Complete\n");
+
 //----------------------------------------process attestation request--------------------------------------//
 
     if(pid != 0)
     {
-        while(1)
-        {
-            memset(&ttp_addr_in, 0, sizeof(ttp_addr_in));
+        //while(1)
+        //{
+    	    sock = socket(PF_INET, SOCK_STREAM, 0);
+    	    if(sock == -1)
+                error_handling("socket() error");
+            
+	    memset(&ttp_addr_in, 0, sizeof(ttp_addr_in));
             ttp_addr_in.sin_family = AF_INET;
             ttp_addr_in.sin_addr.s_addr = htonl(INADDR_ANY);
-            ttp_addr_in.sin_port = htons(atoi(argv[3]));
+            ttp_addr_in.sin_port = htons(atoi(argv[1]));
 
             if(bind(sock, (struct sockaddr*)&ttp_addr_in, sizeof(ttp_addr_in)) == -1)
                 error_handling("bind() error");
@@ -71,42 +78,52 @@ int main(int argc, char *argv[])
 
             recv(sock, recv_buf, sizeof(recv_buf), 0);
             printf("%s\n", recv_buf);
-            //Doing remote attestation
-        }
+            
+	    shutdown(sock, SHUT_RDWR);
+	    close(sock);
+	    //Doing remote attestation
+        //}
     }
 //-------------------------------------------process migration---------------------------------------------// 
     else
     {
-        while(1)
-        {
-            memset(&ttp_addr, 0, sizeof(ttp_addr));
+        //while(1)
+        //{
+    	    sock2 = socket(PF_INET, SOCK_STREAM, 0);
+    	    if(sock2 == -1)
+                error_handling("socket() error");
+            
+	    memset(&ttp_addr, 0, sizeof(ttp_addr));
             ttp_addr.sin_family = AF_INET;
-            ttp_addr.sin_addr.s_addr = inet_addr(INADDR_ANY);
+            ttp_addr.sin_addr.s_addr = htonl(INADDR_ANY);
             //ttp_addr.sin_addr.s_addr = inet_addr(argv[1]);
-            ttp_addr.sin_port = htons(atoi(argv[3]));
+            ttp_addr.sin_port = htons(atoi(argv[2]));
             //ttp_addr.sin_port = htons(atoi(argv[2]));
 
             if(bind(sock2, (struct sockaddr*)&ttp_addr, sizeof(ttp_addr)) == -1)
 
             printf("Listening migration signal\n");
-            if(listen(sock, 5) == -1)
+            if(listen(sock2, 5) == -1)
                 error_handling("listen() error");    
 
-            ttp_addr_in_size = sizeof(ttp_addr_in);
-            sock = accept(sock, (struct sockaddr*)&ttp_addr_in, &ttp_addr_in_size);
+            ttp_addr_size = sizeof(ttp_addr);
+            sock2 = accept(sock2, (struct sockaddr*)&ttp_addr, &ttp_addr_size);
 
-            if(sock == -1)
+            if(sock2 == -1)
                 error_handling("accept() error");
 
-            recv(sock, recv_buf, sizeof(recv_buf), 0);
-            printf("%s\n", recv_buf);
+            recv(sock2, recv_buf2, sizeof(recv_buf), 0);
+            printf("%s\n", recv_buf2);
             /*
             if(connect(sock2, (struct sockaddr*)&ttp_addr, sizeof(ttp_addr)) == -1)
                 error_handling("connect() error");
 
             send(sock2, message, sizeof(message), 0);
             */
-        }
+
+	    shutdown(sock2, SHUT_RDWR);
+	    close(sock2);
+        //}
     }
     return 0;
 }
