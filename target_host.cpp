@@ -21,11 +21,13 @@ int main(int argc, char *argv[])
     char recv_buf[BUF_SIZE];
     int msg_len;
 
+    pid_t pid;
+
     char message[] = "attestation result check request";
 
-    if(argc != 4)
+    if(argc != 3)
     {
-        printf("Usage: %s <server IP> <server port> <incoming_port>\n", argv[0]);
+        printf("Usage: %s <ttp server port> <mig incoming port>\n", argv[0]);
         exit(1);
     }
 
@@ -37,40 +39,71 @@ int main(int argc, char *argv[])
     if(sock == -1)
         error_handling("socket() error");
 
-    printf("%s\n", argv[3]);
+    printf("TTP remote attestaton port : %s\n", argv[3]);
 
-    memset(&ttp_addr, 0, sizeof(ttp_addr));
-    ttp_addr_in.sin_family = AF_INET;
-    ttp_addr_in.sin_addr.s_addr = htonl(INADDR_ANY);
-    ttp_addr_in.sin_port = htons(atoi(argv[3]));
+    pid = fork();
 
-    if(bind(sock, (struct sockaddr*)&ttp_addr_in, sizeof(ttp_addr_in)) == -1)
-        error_handling("bind() error");
+//----------------------------------------process attestation request--------------------------------------//
 
-    if(listen(sock, 5) == -1)
-        error_handling("listen() error");    
+    if(pid != 0)
+    {
+        while(1)
+        {
+            memset(&ttp_addr_in, 0, sizeof(ttp_addr_in));
+            ttp_addr_in.sin_family = AF_INET;
+            ttp_addr_in.sin_addr.s_addr = htonl(INADDR_ANY);
+            ttp_addr_in.sin_port = htons(atoi(argv[3]));
 
-    ttp_addr_in_size = sizeof(ttp_addr_in);
-    sock = accept(sock, (struct sockaddr*)&ttp_addr_in, &ttp_addr_in_size);
-    
-    if(sock == -1)
-        error_handling("accept() error");
-    
-    recv(sock, recv_buf, sizeof(recv_buf), 0);
-    printf("%s\n", recv_buf);
-    //make Attestation result
-    printf("Waiting for migration request\n", recv_buf);
+            if(bind(sock, (struct sockaddr*)&ttp_addr_in, sizeof(ttp_addr_in)) == -1)
+                error_handling("bind() error");
 
-    memset(&ttp_addr, 0, sizeof(ttp_addr));
-    ttp_addr.sin_family = AF_INET;
-    ttp_addr.sin_addr.s_addr = inet_addr(argv[1]);
-    ttp_addr.sin_port = htons(atoi(argv[2]));
+            if(listen(sock, 5) == -1)
+                error_handling("listen() error");    
 
-    if(connect(sock2, (struct sockaddr*)&ttp_addr, sizeof(ttp_addr)) == -1)
-        error_handling("connect() error");
+            ttp_addr_in_size = sizeof(ttp_addr_in);
+            sock = accept(sock, (struct sockaddr*)&ttp_addr_in, &ttp_addr_in_size);
 
-    send(sock2, message, sizeof(message), 0);
+            if(sock == -1)
+                error_handling("accept() error");
 
+            recv(sock, recv_buf, sizeof(recv_buf), 0);
+            printf("%s\n", recv_buf);
+            //Doing remote attestation
+        }
+    }
+//-------------------------------------------process migration---------------------------------------------// 
+    else
+    {
+        while(1)
+        {
+            memset(&ttp_addr, 0, sizeof(ttp_addr));
+            ttp_addr.sin_family = AF_INET;
+            ttp_addr.sin_addr.s_addr = inet_addr(INADDR_ANY);
+            //ttp_addr.sin_addr.s_addr = inet_addr(argv[1]);
+            ttp_addr.sin_port = htons(atoi(argv[3]));
+            //ttp_addr.sin_port = htons(atoi(argv[2]));
+
+            if(bind(sock2, (struct sockaddr*)&ttp_addr, sizeof(ttp_addr)) == -1)
+
+            if(listen(sock, 5) == -1)
+                error_handling("listen() error");    
+
+            ttp_addr_in_size = sizeof(ttp_addr_in);
+            sock = accept(sock, (struct sockaddr*)&ttp_addr_in, &ttp_addr_in_size);
+
+            if(sock == -1)
+                error_handling("accept() error");
+
+            recv(sock, recv_buf, sizeof(recv_buf), 0);
+            printf("%s\n", recv_buf);
+            /*
+            if(connect(sock2, (struct sockaddr*)&ttp_addr, sizeof(ttp_addr)) == -1)
+                error_handling("connect() error");
+
+            send(sock2, message, sizeof(message), 0);
+            */
+        }
+    }
     return 0;
 }
 
