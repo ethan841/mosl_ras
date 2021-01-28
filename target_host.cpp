@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     //if(sock == -1)
     //    error_handling("socket() error");
 
-    printf("Target host daemnon sample\n");
+    printf("Target host daemon sample\n");
     printf("TTP remote attestaton port : %s\n", argv[1]);
     printf("Migration signal port : %s\n", argv[2]);
 

@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
     if(connect(source_sock, (struct sockaddr*)&source_host_addr, sizeof(source_host_addr)) == -1)
         error_handling("target connect() error");
     
-    send(source_sock, message, sizeof(message2), 0);
+    send(source_sock, message2, sizeof(message2), 0);
 
 //-------------------------------------------------Repeat----------------------------------------------//
 
