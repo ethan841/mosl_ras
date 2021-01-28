@@ -2,11 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <iostream>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 
 #define BUF_SIZE 1024
+
+using namespace std;
 
 void error_handling(char *message);
 
@@ -23,6 +26,7 @@ int main(int argc, char *argv[])
     int msg_len;
 
     pid_t pid;
+    pid_t pid2;
 
     char message[] = "attestation result check request";
 
@@ -58,7 +62,7 @@ int main(int argc, char *argv[])
     	    if(sock == -1)
                 error_handling("socket() error");
             
-	    memset(&ttp_addr_in, 0, sizeof(ttp_addr_in));
+	        memset(&ttp_addr_in, 0, sizeof(ttp_addr_in));
             ttp_addr_in.sin_family = AF_INET;
             ttp_addr_in.sin_addr.s_addr = htonl(INADDR_ANY);
             ttp_addr_in.sin_port = htons(atoi(argv[1]));
@@ -79,9 +83,44 @@ int main(int argc, char *argv[])
             recv(sock, recv_buf, sizeof(recv_buf), 0);
             printf("%s\n", recv_buf);
             
-	    shutdown(sock, SHUT_RDWR);
-	    close(sock);
-	    //Doing remote attestation
+	        shutdown(sock, SHUT_RDWR);
+	        close(sock);
+	        //Doing remote attestation
+
+            //Absolute Path
+            //char *dcap_args[] = {"/home/mobileosdcaps/SGX/SGXDataCenterAttestationPrimitives/SampleCode/QuoteGenerationSample/app", NULL};
+            char *dcap_args[] = {"/home/mobileosdcaps/SGX/mosl/SGXDataCenterAttestationPrimitives/SampleCode/QuoteGenerationSample/app 127.0.0.1 5500", NULL};
+            char *epid_args[] = {"/home/mobileosdcaps/SGX/sgx-ra-sample/run-client", NULL};
+            int ret;
+
+            pid2 = fork();
+
+            if(pid2 != 0)//parent
+            {
+                return 0;
+            }
+            else //child
+            {
+                //execute dcap remote attestation sample
+                ret = system(dcap_args[0]);
+
+                if(ret != 0)
+                {
+                    cout << "Error in DCAP Remote Attestation Process" << endl;
+                    //execute epid remote attestation sample
+                    ret = execv("/home/mobileosdcaps/SGX/sgx-ra-sample/run-client", epid_args);
+                    //ret = execv("/home/mobileosdcaps/SGX/SGXDataCenterAttestationPrimitives/SampleCode/QuoteGenerationSample/app", dcap_args);
+                    //ret = system(epid_args[0]);
+                    if(ret != 0)
+                    {
+                        perror("execv");
+                        exit(EXIT_FAILURE);
+                    }
+    
+                }
+                else
+        	        cout << "DCAP Attestation END" << endl;
+            }
         //}
     }
 //-------------------------------------------process migration---------------------------------------------// 
