@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
     if(argc != 3)
     {
-        printf("Usage: %s <ttp server port> <mig incoming port>\n", argv[0]);
+        printf("Usage: %s <attestation port> <mig port>\n", argv[0]);
         exit(1);
     }
 
@@ -39,7 +39,9 @@ int main(int argc, char *argv[])
     if(sock == -1)
         error_handling("socket() error");
 
-    printf("TTP remote attestaton port : %s\n", argv[3]);
+    printf("Target host daemnon sample\n");
+    printf("TTP remote attestaton port : %s\n", argv[1]);
+    printf("Migration signal port : %s\n", argv[2]);
 
     pid = fork();
 
@@ -57,6 +59,7 @@ int main(int argc, char *argv[])
             if(bind(sock, (struct sockaddr*)&ttp_addr_in, sizeof(ttp_addr_in)) == -1)
                 error_handling("bind() error");
 
+            printf("Listening remote attestation request\n");
             if(listen(sock, 5) == -1)
                 error_handling("listen() error");    
 
@@ -85,6 +88,7 @@ int main(int argc, char *argv[])
 
             if(bind(sock2, (struct sockaddr*)&ttp_addr, sizeof(ttp_addr)) == -1)
 
+            printf("Listening migration signal\n");
             if(listen(sock, 5) == -1)
                 error_handling("listen() error");    
 
