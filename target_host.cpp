@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
     pid = fork();
 
-    printf("Fork Complete\n");
+    printf("Fork Complete\n\n");
 
 //----------------------------------------process attestation request--------------------------------------//
 
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
             if(bind(sock, (struct sockaddr*)&ttp_addr_in, sizeof(ttp_addr_in)) == -1)
                 error_handling("bind() error");
 
-            printf("Listening remote attestation request\n");
+            printf("Listening remote attestation request\n\n");
             if(listen(sock, 5) == -1)
                 error_handling("listen() error");    
 

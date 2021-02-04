@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    printf("TTP Server process Sample. - Need more Development\n");
+    printf("TTP Server process Sample. - Need more Development\n\n");
 
     //user init sock
     user_sock = socket(PF_INET, SOCK_STREAM, 0);
@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
 
 //------------------------------------1. listening user init message------------------------------------//
 
+    printf("Step 1. listening user's migration request\n\n");
     memset(&user_addr, 0, sizeof(user_addr));
     user_addr.sin_family = AF_INET;
     user_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -83,7 +84,7 @@ int main(int argc, char *argv[])
     recv(user_sock, recv_buf, sizeof(recv_buf), 0);
     
     printf("Migration Request received\n"); 
-    printf("%s\n", recv_buf); 
+    printf("%s\n\n", recv_buf); 
     // print source platform message + information  
 
 //----------------------------2. Sending remote attestation request to target host----------------------//
@@ -93,13 +94,16 @@ int main(int argc, char *argv[])
     target_host_addr.sin_addr.s_addr = inet_addr(argv[2]);
     target_host_addr.sin_port = htons(atoi(argv[3]));
 
+    sleep(1);
+
     if(connect(target_sock, (struct sockaddr*)&target_host_addr, sizeof(target_host_addr)) == -1)
         error_handling("target connect() error");
     
+    printf("Step 2. Send Attestation request to target host\n\n");
     send(target_sock, message, sizeof(message), 0);
 
 //----------------------------3. listening remote attestation result-------------------------------------//
-/*
+
     memset(&remote_addr, 0, sizeof(remote_addr));
     remote_addr.sin_family = AF_INET;
     remote_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -108,6 +112,7 @@ int main(int argc, char *argv[])
     if(bind(remote_sock, (struct sockaddr*)&remote_addr, sizeof(remote_addr)) == -1)
         error_handling("bind() error");
 
+    printf("Step 3. Waiting Attestation result from Attestation Server\n\n");
     if(listen(remote_sock, 5) == -1)
         error_handling("listen() error");
     
@@ -120,9 +125,9 @@ int main(int argc, char *argv[])
     //write(source_host_sock, message, sizeof(message));
     recv(remote_sock, recv_buf2, sizeof(recv_buf2), 0);
     
-    printf("Remote Attestation Result received\n"); 
-    printf("%s\n", recv_buf2); 
-*/
+    printf("Remote Attestation Result received\n\n"); 
+    printf("result : %s\n\n", recv_buf2); 
+
 //---------------------------4. Send migration start signal to source host------------------------------//
 
     memset(&source_host_addr, 0, sizeof(source_host_addr));
@@ -130,14 +135,16 @@ int main(int argc, char *argv[])
     source_host_addr.sin_addr.s_addr = inet_addr(argv[4]);
     source_host_addr.sin_port = htons(atoi(argv[5]));
 
+    sleep(1);
     if(connect(source_sock, (struct sockaddr*)&source_host_addr, sizeof(source_host_addr)) == -1)
         error_handling("target connect() error");
     
+    printf("Step 4. Send migration signal to source host\n\n");
     send(source_sock, message2, sizeof(message2), 0);
 
 //-------------------------------------------------Repeat----------------------------------------------//
 
-    printf("end of Sample.\n");
+    printf("end of TTP server Sample.\n");
 
     close(user_sock);
     close(remote_sock);

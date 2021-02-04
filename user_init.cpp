@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     //char message[BUF_SIZE];
     int msg_len;
 
-    char message[] = "M User's migration request";
+    char message[] = "User's migration request";
 
     if(argc != 3)
     {
