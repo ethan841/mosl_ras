@@ -5,11 +5,20 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <curl/curl.h>
+#include <string>
 
 #define BUF_SIZE 1024
 #define ATT_PORT 4500
 
+using namespace std;
+
 void error_handling(char* message);
+size_t writeFunction(void *ptr, size_t size, size_t nmemb, string* data)
+{
+    data->append((char*) ptr, size * nmemb);
+    return size * nmemb;
+}
 
 int main(int argc, char *argv[])
 {
@@ -33,10 +42,55 @@ int main(int argc, char *argv[])
     char message[] = "Request Remote Attestation - TTP";
     char message2[] = "Start Migration - TTP";
 
-    //fixed target ip -> need change
-    if(argc != 6)
+    string response_string;
+    string header_string;
+
+    auto curl = curl_easy_init();
+    auto curl2 = curl_easy_init();
+
+    if(curl)
     {
-        printf("Usage:%s <User init incoming port> <target IP> <target Port> <source IP> <source Port>\n", argv[0]);
+	printf("DCAP attestation Server connect ready\n");
+	curl_easy_setopt(curl, CURLOPT_URL, "https://localhost:8081/sgx/certification/v2/verification");
+	curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+	//curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+	//curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYPEER, 0L);
+	//curl_easy_setopt(curl, CURLOPT_USERPWD, "user:pass");
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "curl/7.42.0");
+	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
+	curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
+
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunction);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
+	curl_easy_setopt(curl, CURLOPT_HEADERDATA, &header_string);
+    }
+
+    if(curl2)
+    {
+	printf("EPID attestation Server connect ready\n");
+	curl_easy_setopt(curl, CURLOPT_URL, "https://localhost:8081/sgx/certification/v2/verification");
+	//curl_easy_setopt(curl2, CURLOPT_URL, "localhost:4000/epid_att_start");
+	curl_easy_setopt(curl2, CURLOPT_NOPROGRESS, 1L);
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+	curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYPEER, 0L);
+	//curl_easy_setopt(curl, CURLOPT_USERPWD, "user:pass");
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "curl/7.42.0");
+	curl_easy_setopt(curl2, CURLOPT_MAXREDIRS, 50L);
+	curl_easy_setopt(curl2, CURLOPT_TCP_KEEPALIVE, 1L);
+
+	curl_easy_setopt(curl2, CURLOPT_WRITEFUNCTION, writeFunction);
+	curl_easy_setopt(curl2, CURLOPT_WRITEDATA, &response_string);
+	curl_easy_setopt(curl2, CURLOPT_HEADERDATA, &header_string);
+    }
+
+
+
+
+    //fixed target ip -> need change
+    if(argc != 7)
+    {
+        printf("Usage:%s <User init incoming port> <target IP> <target Port> <source IP> <source Port> <dcap : 1, EPID : 2>\n", argv[0]);
         exit(1);
     }
 
@@ -83,18 +137,34 @@ int main(int argc, char *argv[])
     //write(source_host_sock, message, sizeof(message));
     recv(user_sock, recv_buf, sizeof(recv_buf), 0);
     
-    printf("Migration Request received\n"); 
-    printf("%s\n\n", recv_buf); 
+    printf("Migration Request received -> "); 
+    printf("%s\n", recv_buf); 
     // print source platform message + information  
 
 //----------------------------2. Sending remote attestation request to target host----------------------//
+// need to check DCAP or EPID Attestation - Based on Platform info DB 
+
+    if(atoi(argv[6]) == 1)
+    {
+    	curl_easy_perform(curl);
+    	curl_easy_cleanup(curl);
+    	curl = NULL;
+    }
+    else
+    {
+    	curl_easy_perform(curl2);
+    	curl_easy_cleanup(curl2);
+    	curl2 = NULL;
+    }
+
+    printf("    Send Attestation Verification request to verification server. (TTP -> Att Server) \n\n");
+
+    sleep(1);
 
     memset(&target_host_addr, 0, sizeof(target_host_addr));
     target_host_addr.sin_family = AF_INET;
     target_host_addr.sin_addr.s_addr = inet_addr(argv[2]);
     target_host_addr.sin_port = htons(atoi(argv[3]));
-
-    sleep(1);
 
     if(connect(target_sock, (struct sockaddr*)&target_host_addr, sizeof(target_host_addr)) == -1)
         error_handling("target connect() error");
@@ -135,7 +205,7 @@ int main(int argc, char *argv[])
     source_host_addr.sin_addr.s_addr = inet_addr(argv[4]);
     source_host_addr.sin_port = htons(atoi(argv[5]));
 
-    sleep(1);
+    //sleep(1);
     if(connect(source_sock, (struct sockaddr*)&source_host_addr, sizeof(source_host_addr)) == -1)
         error_handling("target connect() error");
     

@@ -82,10 +82,10 @@ int main(int argc, char *argv[])
 
             recv(sock, recv_buf, sizeof(recv_buf), 0);
             printf("%s\n", recv_buf);
-            
-	        shutdown(sock, SHUT_RDWR);
-	        close(sock);
-	        //Doing remote attestation
+	    
+	    shutdown(sock, SHUT_RDWR);
+	    close(sock);
+	    //Doing remote attestation
 
             //Absolute Path
             //char *dcap_args[] = {"/home/mobileosdcaps/SGX/SGXDataCenterAttestationPrimitives/SampleCode/QuoteGenerationSample/app", NULL};
